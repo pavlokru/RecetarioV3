@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    container_name: recetario_v2_app
+    restart: always
+    working_dir: /workspace
+    # Este comando mantiene la app viva y en ejecución
+    command: streamlit run app.py --server.port=8502 --server.address=0.0.0.0 --server.fileWatcherType=auto
+    ports:
+      - "8502:8502"
+    volumes:
+      - .:/workspace
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8502/_stcore/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
