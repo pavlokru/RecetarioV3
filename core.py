@@ -1,3 +1,4 @@
+# core.py
 import sqlite3
 import json
 import os
@@ -49,21 +50,25 @@ class CatalogEngine:
                     cursor.execute(query_insert, (
                         r.get("nombre"), r.get("categoria"), r.get("origen"),
                         r.get("dificultad"), r.get("tiempo_preparacion_min"), r.get("porciones"),
-                        json.dumps(r.get("ingredientes", [])), json.dumps(r.get("pasos", [])),
-                        json.dumps(r.get("etiquetas", [])), r.get("nota"), r.get("imagen_url")
+                        json.dumps(r.get("ingredientes") or []), 
+                        json.dumps(r.get("pasos") or []),
+                        json.dumps(r.get("etiquetas") or []), 
+                        r.get("nota"), r.get("imagen_url")
                     ))
                 conn.commit()
 
     def obtener_todos(self):
         with self._get_connection() as conn:
-            cursor = conn.execute("SELECT * FROM recetas ORDER BY nombre ASC")
-            return [dict(row) for row in cursor.fetchall()]
+            # Se unifica en una sola consulta para evitar doble ejecución en memoria
+            cursor = conn.execute("SELECT * FROM recetas ORDER BY id ASC")
+            filas = cursor.fetchall()
+            return [dict(fila) for fila in filas]
 
     def buscar(self, termino):
         query = """
         SELECT * FROM recetas 
         WHERE nombre LIKE ? OR categoria LIKE ? OR origen LIKE ? OR etiquetas LIKE ? OR ingredientes LIKE ?
-        ORDER BY nombre ASC
+        ORDER BY id ASC
         """
         termino_like = f"%{termino}%"
         with self._get_connection() as conn:
@@ -81,8 +86,10 @@ class CatalogEngine:
             conn.execute(query, (
                 datos.get("nombre"), datos.get("categoria"), datos.get("origen"),
                 datos.get("dificultad"), datos.get("tiempo_preparacion_min"), datos.get("porciones"),
-                json.dumps(datos.get("ingredientes", [])), json.dumps(datos.get("pasos", [])),
-                json.dumps(datos.get("etiquetas", [])), datos.get("nota"), datos.get("imagen_url")
+                json.dumps(datos.get("ingredientes") or []), 
+                json.dumps(datos.get("pasos") or []),
+                json.dumps(datos.get("etiquetas") or []), 
+                datos.get("nota"), datos.get("imagen_url")
             ))
             conn.commit()
 
@@ -98,8 +105,10 @@ class CatalogEngine:
             conn.execute(query, (
                 datos.get("nombre"), datos.get("categoria"), datos.get("origen"),
                 datos.get("dificultad"), datos.get("tiempo_preparacion_min"), datos.get("porciones"),
-                json.dumps(datos.get("ingredientes", [])), json.dumps(datos.get("pasos", [])),
-                json.dumps(datos.get("etiquetas", [])), datos.get("nota"), datos.get("imagen_url"),
+                json.dumps(datos.get("ingredientes") or []), 
+                json.dumps(datos.get("pasos") or []),
+                json.dumps(datos.get("etiquetas") or []), 
+                datos.get("nota"), datos.get("imagen_url"),
                 receta_id
             ))
             conn.commit()
